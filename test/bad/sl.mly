@@ -18,4 +18,4 @@ wrap(t):
  t {}
 
 seq(t):
-| wrap(seq(seq(t))) {}
+| wrap(seq(wrap(t))) {}
