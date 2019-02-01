@@ -79,6 +79,17 @@ type edge =
   | Safe
   | Dangerous
 
+let desc_of_formal (nt, i) =
+  let rule = try StringMap.find nt g.p_rules with Not_found -> assert false in
+  let x  = try List.nth rule.pr_parameters i with Failure _ -> assert false in
+  (rule, x)
+
+let used_parameter formal =
+  let (rule, x) = desc_of_formal formal in
+  let in_producer (_, param, _) = Parameters.occurs x param in
+  let in_branch branch = List.exists in_producer branch.pr_producers in
+  List.(exists in_branch rule.pr_branches)
+
 let rec successors_parameter (f : edge -> formal -> unit) x param =
   match param with
   | ParameterVar _ ->
@@ -90,11 +101,13 @@ let rec successors_parameter (f : edge -> formal -> unit) x param =
          then there is an edge to the formal [nt, i]. Whether it is a safe
          or dangerous edge depends on whether [x] occurs shallow or deep. *)
       List.iteri (fun i param ->
-        successors_parameter f x param;
-        if Parameters.occurs_shallow x param then
-          f Safe (nt, i)
-        else if Parameters.occurs_deep x param then
-          f Dangerous (nt, i)
+        if used_parameter (nt, i) then begin
+            successors_parameter f x param;
+            if Parameters.occurs_shallow x param then
+              f Safe (nt, i)
+            else if Parameters.occurs_deep x param then
+              f Dangerous (nt, i)
+        end
       ) params
   | ParameterAnonymous _ ->
       assert false
@@ -105,9 +118,8 @@ let successors_producer f x ((_, param, _) : producer) =
 let successors_branch f x (branch : parameterized_branch) =
   List.iter (successors_producer f x) branch.pr_producers
 
-let successors f ((nt, i) : formal) =
-  let rule = try StringMap.find nt g.p_rules with Not_found -> assert false in
-  let x  = try List.nth rule.pr_parameters i with Failure _ -> assert false in
+let successors f formal =
+  let (rule, x) = desc_of_formal formal in
   List.iter (successors_branch f x) rule.pr_branches
 
 (* -------------------------------------------------------------------------- *)
