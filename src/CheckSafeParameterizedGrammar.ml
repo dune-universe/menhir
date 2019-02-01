@@ -79,7 +79,7 @@ type edge =
   | Safe
   | Dangerous
 
-let successors_parameter (f : edge -> formal -> unit) x (param : parameter) =
+let rec successors_parameter (f : edge -> formal -> unit) x param =
   match param with
   | ParameterVar _ ->
       (* This is not an application. No successors. *)
@@ -90,6 +90,7 @@ let successors_parameter (f : edge -> formal -> unit) x (param : parameter) =
          then there is an edge to the formal [nt, i]. Whether it is a safe
          or dangerous edge depends on whether [x] occurs shallow or deep. *)
       List.iteri (fun i param ->
+        successors_parameter f x param;
         if Parameters.occurs_shallow x param then
           f Safe (nt, i)
         else if Parameters.occurs_deep x param then
