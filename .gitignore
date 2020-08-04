@@ -1,6 +1,7 @@
 *~
 .merlin
 _build
+*.install
 analysis/data.csv
 analysis/*.pdf
 dune-workspace.versions
