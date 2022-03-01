@@ -18,7 +18,7 @@
   (action
   (progn
     (run hevea -fix %{src})
-    (run sed -i.bak -e "s/cellpadding0/cellpadding1/" manual.html)))
+    (run sed -i.bak -e "s/cellpadding0/cellpadding1/" manual.html))))
 
 (install
   (section doc)
